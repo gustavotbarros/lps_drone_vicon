@@ -21,9 +21,9 @@ setup(
     entry_points={
         'console_scripts': [
             'offboard_mode = drone_control.offboard_mode:main',
-            'vehicle_visual_pub = drone_control.vehicle_visual_pub:main',
+            'vicon_bridge = drone_control.vicon_bridge:main',
             'setpoint_publisher = drone_control.setpoint_publisher:main',
-            'square_planner = drone_control.square_planner:main',
+            'rectangle_planner = drone_control.rectangle_planner:main',
             'circle_planner = drone_control.circle_planner:main'
         ],
     },

@@ -98,6 +98,9 @@ class CirclePlanner(Node):
                 msg.z = float(self.z)*(-1)
                 msg.yaw = np.deg2rad(float(self.yaw))
 
+                print(msg.x)
+                print(msg.y)
+
                 self.trajectory_setpoint_publisher_.publish(msg)
                 
                 sleep(1.0)

@@ -12,25 +12,24 @@ class OffboardMode(Node):
     def __init__(self):
         super().__init__('offboard_mode')
 
-        # Publishers:
+        # sublishers:
         self.offboard_control_mode_publisher_ = self.create_publisher(OffboardControlMode, "fmu/offboard_control_mode/in", 10)
         self.trajectory_setpoint_publisher_ = self.create_publisher(TrajectorySetpoint, "fmu/trajectory_setpoint/in", 10)
         self.vehicle_command_publisher_ = self.create_publisher(VehicleCommand, "fmu/vehicle_command/in", 10)
 
-        # Subscribers:
+        # subscribers:
         self.timesync_sub_ = self.create_subscription(Timesync, "fmu/timesync/out", self.timesync_callback, 10)
         self.trajectory_setpoint_sub_ = self.create_subscription(TrajectorySetpoint, "com/use_setpoint", self.process_trajectory_setpoint, 10)
 
-        # Parameters and Local Variables:
-        # TrajectorySetpoint:
+        # parameters and local variables
         self.x = 0.0
         self.y = 0.0
-        self.z = -1.2
+        self.z = -1.6
         self.yaw = 0.0
         self.timestamp_ = 0
         
-        # For timer:
-        self.offboard_setpoint_counter_ = 0  # counter for the number of setpoints sent
+        # initialize parameters
+        self.offboard_setpoint_counter_ = 0  
         timer_period = 0.2  # seconds
         self.timer_ = self.create_timer(timer_period, self.timer_callback)
 
@@ -40,32 +39,36 @@ class OffboardMode(Node):
     def timer_callback(self):
         self.offboard_setpoint_counter_+= 1
         
+        # arms the vehicle:
         if self.offboard_setpoint_counter_ >= 2:
             self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, float(1), float(6))
             self.arm()
             
             self.offboard_setpoint_counter_ += 1
         
+        # send the setpoints to the vehicle
         if self.offboard_setpoint_counter_ >= 10:
 
             self.publish_offboard_control_mode()
             self.publish_trajectory_setpoint()
 
+    # reads the input setpoint inputs from the console   
     def process_trajectory_setpoint(self, traj):
 
         self.x = traj.x
         self.y = traj.y
         self.z = traj.z
         self.yaw = traj.yaw
-        
+    
+    # send a command to arm the vehicle
     def arm(self):
         self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM, 1.0, 0.0)
 
-    # @brief  Send a command to Disarm the vehicle
+    # send a command to desarm the vehicle
     def disarm(self):
         self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM, 0.0, 0.0)
 
-    # @brief Publish the offboard control mode. For this example, only position and altitude controls are active.
+    # publish the offboard control mode (position is active)
     def publish_offboard_control_mode(self):
         msg = OffboardControlMode()
         
@@ -76,7 +79,8 @@ class OffboardMode(Node):
         msg.attitude = False
         msg.body_rate = False
         self.offboard_control_mode_publisher_.publish(msg)
-        
+    
+    # publish the setpoints from the control interface
     def publish_trajectory_setpoint(self):
         msg = TrajectorySetpoint()
 
@@ -88,6 +92,7 @@ class OffboardMode(Node):
 
         self.trajectory_setpoint_publisher_.publish(msg)
 
+    # publish the vehicle commands (arm, disarm, etc.)
     def publish_vehicle_command(self, command, param1, param2):
         msg = VehicleCommand()
         msg.timestamp = self.timestamp_
@@ -101,7 +106,8 @@ class OffboardMode(Node):
         msg.from_external = True
 
         self.vehicle_command_publisher_.publish(msg)
-
+    
+    # perform landing in land mode (not tested)
     def publish_takeoff(self, command, param1, param2, param3):
         msg = VehicleCommand()
         msg.timestamp = self.timestamp_

@@ -5,7 +5,7 @@ import numpy as np
 
 from px4_msgs.msg import TrajectorySetpoint
 
-class SquarePlanner(Node):
+class RectanglePlanner(Node):
     def __init__(self):
         super().__init__('setpoint_publisher')
 
@@ -52,6 +52,7 @@ class SquarePlanner(Node):
 
         self.yaw = input("Yaw angle [°]: ")
 
+        # publish setpoints for rectangle drawing
         try:
             print("------------  Flying!  ------------")
 
@@ -113,8 +114,8 @@ class SquarePlanner(Node):
 
 def main(args=None):
     rclpy.init()
-    square_planner = SquarePlanner()
-    rclpy.spin(square_planner)
+    rectangle_planner = RectanglePlanner()
+    rclpy.spin(rectangle_planner)
     rclpy.shutdown()
 
 if __name__ == "__main__":

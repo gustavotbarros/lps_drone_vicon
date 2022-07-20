@@ -6,20 +6,24 @@ from px4_msgs.msg import VehicleImu
 from geometry_msgs.msg import PoseStamped
 from math import *
 
-class VehicleVisualOdomPublisher(Node):
+class ViconBridge(Node):
     def __init__(self):
         super().__init__("vicon_bridge")
 
+        # publishers:
         self.position_publisher_pi_ = self.create_publisher(PoseStamped, "/com/odom_feedback", 10)
         self.mocap_pub_ = self.create_publisher(VehicleVisualOdometry, "fmu/vehicle_visual_odometry/in", 10)
         
+        # subscribers:
         self.vehicle_imu_sub_ = self.create_subscription(VehicleImu, "fmu/vehicle_imu/out", self.vehicle_imu_callback, 10)
         self.estimator_odom_sub_ = self.create_subscription(EstimatorVisualOdometryAligned, "fmu/estimator_visual_odometry_aligned/out", self.estimator_visual_odom_callback, 10)
         self.mocap_sub_ = self.create_subscription(PoseStamped, "/drohne_lps/pose", self.vicon_callback, 10)
-
+        
+        # timer
         timer_period = 0.02  # seconds
         self.timer_ = self.create_timer(timer_period, self.timer_callback)
 
+        # initialize parameters
         self.timestamp = 0
         self.timestamp_sample = 0
         self.x = 0.0
@@ -27,6 +31,7 @@ class VehicleVisualOdomPublisher(Node):
         self.z = 0.0
         self.q = [0.0,0.0,0.0,0.0]
     
+    # receives position data from vicon through vrpn client
     def vicon_callback(self, msg_in):
         
         #self.timestamp_sample = self.timestamp
@@ -38,11 +43,13 @@ class VehicleVisualOdomPublisher(Node):
         self.q[2] = -msg_in.pose.orientation.y
         self.q[3] = -msg_in.pose.orientation.z
 
+    # reads the timestamp from vehicle_imu topic
     def vehicle_imu_callback(self, msg):
         
         self.timestamp = msg.timestamp
         self.timestamp_sample = msg.timestamp_sample
 
+    # publish vicon position in a custom topic for debugging purposes
     def estimator_visual_odom_callback(self, msg):
 
         msg_pub = PoseStamped()
@@ -57,6 +64,7 @@ class VehicleVisualOdomPublisher(Node):
         msg_pub.pose.orientation.z = float(-msg.q[3])
         self.position_publisher_pi_.publish(msg_pub)
 
+    # send vicon data to the flight controller
     def timer_callback(self):        
         msg = VehicleVisualOdometry()
 
@@ -79,8 +87,8 @@ class VehicleVisualOdomPublisher(Node):
 
 def main(args=None):
     rclpy.init()
-    vehicle_visual_pub = VehicleVisualOdomPublisher()
-    rclpy.spin(vehicle_visual_pub)
+    vicon_bridge = ViconBridge()
+    rclpy.spin(vicon_bridge)
     rclpy.shutdown()
 
 
