@@ -40,7 +40,7 @@ class CirclePlanner(Node):
                 self.y = self.radius
                 break
         
-        self.z = input("z [m]: ")
+        self.z = input("Z [m]: ")
         while True:
             if self.zmin > float(self.z) or float(self.z) > self.zmax:
                 self.z = input("Try again! Position in z [m]: ")
@@ -86,6 +86,7 @@ class CirclePlanner(Node):
 
             sleep(5)
             
+            # draw a circle:
             while self.count < 100.0:
                 
                 self.x = float(self.radius)*np.cos(self.count*0.5)
@@ -98,15 +99,11 @@ class CirclePlanner(Node):
                 msg.z = float(self.z)*(-1)
                 msg.yaw = np.deg2rad(float(self.yaw))
 
-                print(msg.x)
-                print(msg.y)
-
                 self.trajectory_setpoint_publisher_.publish(msg)
                 
                 sleep(1.0)
 
                 self.count += 0.8
-                print(self.count)
                 
         except ValueError:
             print("Inputs are not valid.")
